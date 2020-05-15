@@ -1,6 +1,7 @@
 package com.example.coolweather;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -30,6 +31,10 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
+
+
+
+    public SwipeRefreshLayout swipeRefresh;
 
     private ImageView bingPicImg;
     private ScrollView weatherLayout;
@@ -75,19 +80,33 @@ public class WeatherActivity extends AppCompatActivity {
         sportText=findViewById(R.id.sport_text);
         bingPicImg=findViewById(R.id.bing_pic_img);
 
+        //swipeRefresh=(SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
+        //swipeRefresh.setColorSchemeResources(R.color.colorPrimary);
+
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString=prefs.getString("weather",null);
+        final String weatherId;
+
         if(weatherString !=null){
 
             //get data from cache
             Weather weather= Utility.handleWeatherResponse(weatherString);
+            weatherId=weather.basic.weatherId;
+
             showWeatherInfo(weather);
 
         }else{
-            String weatherId=getIntent().getStringExtra("weather_id");
+             weatherId=getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(weatherId);
         }
+
+//        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+//            @Override
+//            public void onRefresh() {
+//                requestWeather(weatherId);
+//            }
+//        });
 
         String bingPic=prefs.getString("bing_pic",null);
         if(bingPic !=null){
@@ -95,6 +114,9 @@ public class WeatherActivity extends AppCompatActivity {
         }else{
             loadBingPic();
         }
+
+
+
 
     }
 
@@ -105,12 +127,16 @@ public class WeatherActivity extends AppCompatActivity {
         HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
+                Log.i("weatherActi6666666", "onFailure: --------------------------------------");
+                e.printStackTrace();
                 Log.i("weatherActi", "onFailure: 获取天气失败:"+e);
 
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this,"获取天气失败",Toast.LENGTH_SHORT).show();
+                     //swipeRefresh.setRefreshing(false);
+
                     }
                 });
 
@@ -120,6 +146,7 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
           final String responseText=response.body().string();
+                Log.i("响应", "onResponse: "+responseText);
 
           final Weather weather=Utility.handleWeatherResponse(responseText);
 
@@ -137,7 +164,7 @@ public class WeatherActivity extends AppCompatActivity {
                    }else {
                        Toast.makeText(WeatherActivity.this,"获取天气失败",Toast.LENGTH_SHORT).show();
                    }
-
+                 //swipeRefresh.setRefreshing(false);
 
 
                }
